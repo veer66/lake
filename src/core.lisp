@@ -190,7 +190,9 @@
   ;; Show message if verbose.
   (verbose (format nil "~A: " (task-name task)))
   ;; Execute the task.
-  (apply (task-action task) args)
+  (apply (task-action task) (append (list (task-name task)
+					  (task-dependency task))
+				    args))
   ;; Show message if verbose.
   (verbose "done." t)
   (values))
@@ -238,7 +240,9 @@
   (if (file-task-to-be-executed-p file-task)
       (progn
         ;; Execute file task.
-        (apply (task-action file-task) args)
+        (apply (task-action file-task) (append (list (task-name file-task)
+						     (task-dependency file-task))
+					       args))
         ;; Show message if verbose.
         (verbose "done." t))
       ;; Skip file task to show message if verbose.
@@ -315,7 +319,9 @@
                   (mapcar #'ensure-pair args))))
       (multiple-value-bind (forms desc) (parse-body body)
         `(register-task (make-task ,name *namespace* ',args ',dependency ,desc
-                                   #'(lambda ,args1
+                                   #'(lambda (task-name task-dependency ,@args1)
+				       (declare (ignore task-name))
+				       (declare (ignore task-dependency))
                                        ,@forms))
                         *tasks*)))))
 
@@ -327,7 +333,9 @@
       (multiple-value-bind (forms desc) (parse-body body)
         `(register-task
           (make-file-task ,name *namespace* ',args ',dependency ,desc
-                          #'(lambda ,args1
+                          #'(lambda (task-name task-dependency ,@args1)
+			      (declare (ignore task-name))
+			      (declare (ignore task-dependency))
                               ,@forms))
           *tasks*)))))
 
